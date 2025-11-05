@@ -1,2 +1,4 @@
 tasks/
 blog-posts/
+tmp/
+.env

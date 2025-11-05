@@ -1,0 +1,73 @@
+# Compose CI pipeline
+x-documentation: >
+  Project: hello-compose-ci
+  Start the CI pipeline:
+  docker compose -f compose.ci.yml up --build
+
+# Define global variables for the CI pipeline 
+x-common-variables: &common-variables
+  PROJECT_NAME: "hello-compose-ci"
+  PROJECT_DESCRIPTION: "A simple web service application"
+
+services:
+
+  # Run unit tests
+  unit-tests:
+    image: golang:1.25.2-alpine
+    environment:
+      <<: *common-variables
+    working_dir: /project
+    command:
+      - /bin/sh
+      - -c
+      - |
+        echo "🧪 Running unit tests for $${PROJECT_NAME}"
+        echo "📝 Description: $${PROJECT_DESCRIPTION}"
+
+        go mod download
+        if go test -v > ./reports/test-output.txt; then
+          echo "✅ Tests completed"
+          echo "📄 Test report generated at ./reports/test-output.txt"
+          go test -cover > ./reports/test-coverage.txt
+          exit 0
+        else
+          echo "❌ Tests failed"
+          exit 1
+        fi
+
+    volumes:
+      - ./:/project
+
+  # Build application
+  build-application:
+    image: golang:1.25.2-alpine
+    environment:
+      <<: *common-variables
+      TARGETOS: ${TARGETOS:-linux}
+      TARGETARCH: ${TARGETARCH:-arm64}
+    working_dir: /project
+    command:
+      - /bin/sh
+      - -c
+      - |
+        echo "🏗️ Building application for $${PROJECT_NAME}"
+        go mod download
+        CGO_ENABLED=0 GOOS=$${TARGETOS} GOARCH=$${TARGETARCH} go build \
+            -ldflags="-s -w" \
+            -o ./builds/hello-$${TARGETOS}-$${TARGETARCH} main.go
+     
+        if [ $? -eq 0 ]; then
+          echo "✅ Build succeeded"
+          echo "📦 Artifact generated at ./builds"
+          exit 0
+        else
+          echo "❌ Build failed"
+          exit 1
+        fi
+
+    volumes:
+      - ./:/project
+    depends_on:
+      unit-tests:
+        condition: service_completed_successfully
+

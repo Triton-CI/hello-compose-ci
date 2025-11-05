@@ -1,5 +1,62 @@
 package main
 
+/*
+Application Flow Diagram:
+
+```mermaid
+graph TD
+    A[Client Request] --> B{Route Handler}
+    B -->|/| C[rootHandler]
+    B -->|/text| D[textHandler]
+    B -->|/html| E[htmlHandler]
+    B -->|/json| F[jsonHandler]
+
+    C --> G[Return HTML with Available Routes]
+
+    D --> H[Create Human struct]
+    H --> I[Format as Plain Text]
+    I --> J[Return text/plain response]
+
+    E --> K[Create Human struct]
+    K --> L[Format as HTML page]
+    L --> M[Return text/html response]
+
+    F --> N[Create Human struct]
+    N --> O[Encode as JSON]
+    O --> P[Return application/json response]
+
+    style C fill:#e1f5ff
+    style D fill:#e1f5ff
+    style E fill:#e1f5ff
+    style F fill:#e1f5ff
+    style H fill:#ffe1e1
+    style K fill:#ffe1e1
+    style N fill:#ffe1e1
+```
+
+```mermaid
+classDiagram
+    class Human {
+        +string Name
+        +int Age
+        +string City
+    }
+
+    class HTTPServer {
+        +rootHandler(w, r)
+        +textHandler(w, r)
+        +htmlHandler(w, r)
+        +jsonHandler(w, r)
+        +main()
+    }
+
+    HTTPServer ..> Human : uses
+
+    note for Human "Data structure used by all handlers"
+    note for HTTPServer "HTTP server listening on port 8080"
+```
+*/
+
 import (
 	"encoding/json"
 	"fmt"
