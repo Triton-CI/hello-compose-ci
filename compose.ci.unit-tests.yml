@@ -1,0 +1,33 @@
+# Define global variables for the CI pipeline
+# x-common-variables: &common-variables
+#   PROJECT_NAME: "hello-compose-ci"
+#   PROJECT_DESCRIPTION: "A simple web service application"
+# https://docs.docker.com/reference/compose-file/extension/
+
+services:
+  # Run unit tests
+  unit-tests:
+    image: golang:1.25.2-alpine
+    # environment:
+    #   <<: *common-variables
+    working_dir: /project
+    command:
+      - /bin/sh
+      - -c
+      - |
+        echo "🧪 Running unit tests for ${PROJECT_NAME}"
+        echo "📝 Description: ${PROJECT_DESCRIPTION}"
+
+        go mod download
+        if go test -v > ./reports/test-output.txt; then
+          echo "✅ Tests completed"
+          echo "📄 Test report generated at ./reports/test-output.txt"
+          go test -cover > ./reports/test-coverage.txt
+          exit 0
+        else
+          echo "❌ Tests failed"
+          exit 1
+        fi
+
+    volumes:
+      - ./:/project

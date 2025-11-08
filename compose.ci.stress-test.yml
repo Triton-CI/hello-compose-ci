@@ -1,0 +1,16 @@
+services:
+
+  stress-test:
+    image: ubuntu:22.04
+    command:  
+      - /bin/bash
+      - -c
+      - |  
+        apt-get update 
+        apt-get -y install hey
+        hey -n 1000 -c 10 -m GET \
+        http://start-service-for-local-testing:8080/json > \
+        /reports/hey.report.$$(date +%Y%m%d_%H%M%S).txt
+
+    volumes:
+      - ./reports:/reports

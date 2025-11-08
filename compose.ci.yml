@@ -4,142 +4,37 @@ x-documentation: >
   Start the CI pipeline:
   docker compose -f compose.ci.yml up --build
 
-# Define global variables for the CI pipeline 
-x-common-variables: &common-variables
-  PROJECT_NAME: "hello-compose-ci"
-  PROJECT_DESCRIPTION: "A simple web service application"
-
 services:
-
   # Run unit tests
   unit-tests:
-    image: golang:1.25.2-alpine
-    environment:
-      <<: *common-variables
-    working_dir: /project
-    command:
-      - /bin/sh
-      - -c
-      - |
-        echo "🧪 Running unit tests for $${PROJECT_NAME}"
-        echo "📝 Description: $${PROJECT_DESCRIPTION}"
-
-        go mod download
-        if go test -v > ./reports/test-output.txt; then
-          echo "✅ Tests completed"
-          echo "📄 Test report generated at ./reports/test-output.txt"
-          go test -cover > ./reports/test-coverage.txt
-          exit 0
-        else
-          echo "❌ Tests failed"
-          exit 1
-        fi
-
-    volumes:
-      - ./:/project
-
-  # Build application
-  # build-application:
-  #   image: golang:1.25.2-alpine
-  #   environment:
-  #     <<: *common-variables
-  #     TARGETOS: ${TARGETOS:-linux}
-  #     TARGETARCH: ${TARGETARCH:-arm64}
-  #   working_dir: /project
-  #   command:
-  #     - /bin/sh
-  #     - -c
-  #     - |
-  #       echo "🏗️ Building application for $${PROJECT_NAME}"
-  #       go mod download
-  #       CGO_ENABLED=0 GOOS=$${TARGETOS} GOARCH=$${TARGETARCH} go build \
-  #           -ldflags="-s -w" \
-  #           -o ./builds/hello-$${TARGETOS}-$${TARGETARCH} main.go
-     
-  #       if [ $? -eq 0 ]; then
-  #         echo "✅ Build succeeded"
-  #         echo "📦 Artifact generated at ./builds"
-  #         exit 0
-  #       else
-  #         echo "❌ Build failed"
-  #         exit 1
-  #       fi
-
-  #   volumes:
-  #     - ./:/project
-  #   depends_on:
-  #     unit-tests:
-  #       condition: service_completed_successfully
+    extends:
+      file: compose.ci.unit-tests.yml
+      service: unit-tests
 
   multi-arch-build-application:
-    image: golang:1.25.2-alpine
-    environment:
-      <<: *common-variables
-    working_dir: /project
-    command:
-      - /bin/sh
-      - -c
-      - |
-        echo "🏗️ Building application for $${PROJECT_NAME}"
-        go mod download
-
-        for OS_ARCH in "linux/amd64" "linux/arm64" "darwin/amd64" "darwin/arm64"; do
-          OS=$${OS_ARCH%/*}
-          ARCH=$${OS_ARCH#*/}
-          echo "Building for $$OS/$$ARCH..."
-          CGO_ENABLED=0 GOOS=$$OS GOARCH=$$ARCH go build \
-              -ldflags="-s -w" \
-              -o ./builds/hello-$$OS-$$ARCH main.go
-          if [ $? -ne 0 ]; then
-            echo "❌ Build failed for $$OS/$$ARCH"
-            exit 1
-          fi
-        done
-
-        echo "✅ All builds succeeded"
-        echo "📦 Artifacts generated at ./builds"
-    volumes:
-      - ./:/project
+    extends:
+      file: compose.ci.multi-arch-build-application.yml
+      service: multi-arch-build-application
+    
     depends_on:
       unit-tests:
         condition: service_completed_successfully
 
-
   # Deploy the function (locally) for testing
   start-service-for-local-testing:
-    labels:
-      local.service: start-service-for-local-testing
-    image: ubuntu:22.04
-    environment:
-      TARGETOS: linux
-      TARGETARCH: arm64    
-    volumes:
-      - ./builds:/builds      
-    command:       
-      - /bin/sh
-      - -c
-      - |  
-        apt-get update && apt-get install -y wget
-        echo "🚀 Starting the service locally on port 8080"
-        chmod +x ./builds/hello-$${TARGETOS}-$${TARGETARCH}
-        ./builds/hello-$${TARGETOS}-$${TARGETARCH}
+    extends:
+      file: compose.ci.start-service-for-local-testing.yml
+      service: start-service-for-local-testing
         
     depends_on:
       multi-arch-build-application:
         condition: service_completed_successfully
 
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 30s
-      retries: 5
-      start_period: 40s
-
   # Test the endpoint
   test-home-endpoint:
-    image: curlimages/curl:latest
-    command: >
-      curl --fail http://start-service-for-local-testing:8080
+    extends:
+      file: compose.ci.test-home-endpoint.yml
+      service: test-home-endpoint
       
     depends_on:
       start-service-for-local-testing:
@@ -147,35 +42,19 @@ services:
 
   # Stress test the endpoint
   stress-test:
-    image: ubuntu:22.04
-    command:  
-      - /bin/bash
-      - -c
-      - |  
-        apt-get update 
-        apt-get -y install hey
-        hey -n 1000 -c 10 -m GET \
-        http://start-service-for-local-testing:8080/json > \
-        /reports/hey.report.$$(date +%Y%m%d_%H%M%S).txt
-
-    volumes:
-      - ./reports:/reports
+    extends:
+      file: compose.ci.stress-test.yml
+      service: stress-test
     depends_on:
       test-home-endpoint:
         condition: service_completed_successfully        
 
   # Stop the function after testing
   stop-web-service:
-    image: docker:cli
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    command:
-      - /bin/sh
-      - -c
-      - |  
-        echo '🚦 Stopping container service...'
-        docker stop $(docker ps -q --filter "label=local.service=start-service-for-local-testing")
-      
+    extends:
+      file: compose.ci.stop-web-service.yml
+      service: stop-web-service
+
     depends_on:
       stress-test:
         condition: service_completed_successfully

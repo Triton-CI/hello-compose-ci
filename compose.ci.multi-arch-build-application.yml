@@ -1,0 +1,30 @@
+services:
+  multi-arch-build-application:
+    image: golang:1.25.2-alpine
+    # environment:
+    #   <<: *common-variables
+    working_dir: /project
+    command:
+      - /bin/sh
+      - -c
+      - |
+        echo "🏗️ Building application for ${PROJECT_NAME}"
+        go mod download
+
+        for OS_ARCH in "linux/amd64" "linux/arm64" "darwin/amd64" "darwin/arm64"; do
+          OS=$${OS_ARCH%/*}
+          ARCH=$${OS_ARCH#*/}
+          echo "Building for $$OS/$$ARCH..."
+          CGO_ENABLED=0 GOOS=$$OS GOARCH=$$ARCH go build \
+              -ldflags="-s -w" \
+              -o ./builds/hello-$$OS-$$ARCH main.go
+          if [ $? -ne 0 ]; then
+            echo "❌ Build failed for $$OS/$$ARCH"
+            exit 1
+          fi
+        done
+
+        echo "✅ All builds succeeded"
+        echo "📦 Artifacts generated at ./builds"
+    volumes:
+      - ./:/project

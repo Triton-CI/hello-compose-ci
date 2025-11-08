@@ -1,0 +1,7 @@
+services:
+
+  test-home-endpoint:
+    image: curlimages/curl:latest
+    command: >
+      curl --fail http://start-service-for-local-testing:8080
+      

@@ -1,0 +1,13 @@
+services:
+  # Stop the function after testing
+  stop-web-service:
+    image: docker:cli
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command:
+      - /bin/sh
+      - -c
+      - |  
+        echo '🚦 Stopping container service...'
+        docker stop $(docker ps -q --filter "label=local.service=start-service-for-local-testing")
+      
