@@ -1,0 +1,19 @@
+# docker compose -f compose.ci.build-publish-image.yml up --build
+services:
+  build-publish-image:
+    image: docker:cli
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/workspace
+    working_dir: /workspace # allow to access the Dockerfile in the current directory
+
+    command:
+      - /bin/sh
+      - -c
+      - |  
+        docker login -u ${DOCKER_HUB_USERNAME} -p ${DOCKER_HUB_PAT} &&
+        docker buildx build \
+        --platform linux/amd64,linux/arm64 \
+        --push -t ${DOCKER_HUB_USERNAME}/hello-local-ci:${TAG:-demo-from-ci} .
+
+      

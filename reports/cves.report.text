@@ -1,0 +1,58 @@
+
+
+## Overview
+
+                    │                Analyzed Image                  
+────────────────────┼────────────────────────────────────────────────
+  Target            │  hello-local-ci:demo-from-ci                   
+    digest          │  2e6424801c4a                                  
+    platform        │ linux/arm64                                    
+    provenance      │ git@github.com:Triton-CI/hello-compose-ci.git  
+                    │  https://github.com/Triton-CI/hello-compose-ci/blob/b55f7c869434d004de70ff2ae7feaa348e8ed017      
+    vulnerabilities │    0C     1H     1M     2L                     
+    size            │ 10 MB                                          
+    packages        │ 26                                             
+
+
+## Packages and Vulnerabilities
+
+   0C     1H     0M     0L  stdlib 1.25.2
+pkg:golang/stdlib@1.25.2
+
+    ✗ HIGH CVE-2025-58187
+      https://scout.docker.com/v/CVE-2025-58187?s=golang&n=stdlib&t=golang&vr=%3E%3D1.25.0%2C%3C1.25.3
+      Affected range : >=1.25.0  
+                     : <1.25.3   
+      Fixed version  : 1.25.3    
+    
+
+   0C     0H     1M     0L  pcre2 10.43-r1
+pkg:apk/alpine/pcre2@10.43-r1?os_name=alpine&os_version=3.22
+
+    ✗ MEDIUM CVE-2025-58050
+      https://scout.docker.com/v/CVE-2025-58050?s=alpine&n=pcre2&ns=alpine&t=apk&osn=alpine&osv=3.22&vr=%3C10.46-r0
+      Affected range : <10.46-r0  
+      Fixed version  : 10.46-r0   
+    
+
+   0C     0H     0M     2L  busybox 1.37.0-r19
+pkg:apk/alpine/busybox@1.37.0-r19?os_name=alpine&os_version=3.22
+
+    ✗ LOW CVE-2025-46394
+      https://scout.docker.com/v/CVE-2025-46394?s=alpine&n=busybox&ns=alpine&t=apk&osn=alpine&osv=3.22&vr=%3C%3D1.37.0-r19
+      Affected range : <=1.37.0-r19  
+      Fixed version  : not fixed     
+    
+    ✗ LOW CVE-2024-58251
+      https://scout.docker.com/v/CVE-2024-58251?s=alpine&n=busybox&ns=alpine&t=apk&osn=alpine&osv=3.22&vr=%3C%3D1.37.0-r19
+      Affected range : <=1.37.0-r19  
+      Fixed version  : not fixed     
+    
+
+
+4 vulnerabilities found in 3 packages
+  CRITICAL  0  
+  HIGH      1  
+  MEDIUM    1  
+  LOW       2  
+

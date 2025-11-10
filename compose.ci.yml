@@ -58,3 +58,43 @@ services:
     depends_on:
       stress-test:
         condition: service_completed_successfully
+
+  # Create a multi architecture image
+  build-local-image:      
+    extends:
+      file: compose.ci.build-local-image.yml
+      service: build-local-image
+
+    depends_on:
+      stop-web-service:
+        condition: service_completed_successfully
+  
+  start-container-from-local-image:
+    extends:
+      file: compose.ci.build-local-image.yml
+      service: start-container-from-local-image
+    # dependencies are defined in the extended file
+  stop-container-from-local-image:
+    extends:
+      file: compose.ci.build-local-image.yml
+      service: stop-container-from-local-image
+    # dependencies are defined in the extended file
+  
+  image-analysis:
+    extends:
+      file: compose.ci.image-analysis.yml
+      service: image-analysis
+
+    depends_on:
+      stop-container-from-local-image:
+        condition: service_completed_successfully
+
+
+  build-publish-image:
+    profiles: [ publish-image ]
+    extends:
+      file: compose.ci.build-publish-image.yml
+      service: build-publish-image
+    depends_on:
+      image-analysis:
+        condition: service_completed_successfully

@@ -1,0 +1,26 @@
+services:
+  # docker compose -f compose.ci.image-analysis.yml up 
+        
+  # Scan the image for vulnerabilities
+  image-analysis:
+    # Use Docker Scout CLI image
+    image: docker/scout-cli
+    user: root  # Required to access Docker socket
+    environment:
+      # Your Docker Hub username
+      DOCKER_SCOUT_HUB_USER: ${DOCKER_HUB_USERNAME}
+      # Your Docker Hub Personal Access Token (PAT)
+      DOCKER_SCOUT_HUB_PASSWORD: ${DOCKER_HUB_PAT}
+      
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock  # Mount Docker socket
+      - ./reports:/reports
+    command: 
+      - cves
+      #- --exit-code 
+      - hello-local-ci:${TAG:-demo-from-ci}
+      - --output
+      - /reports/cves.report.text
+
+    # `--exit-code`  generates exit code 2 if vulnerabilities are found
+    #tty: true

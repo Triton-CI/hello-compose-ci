@@ -1,0 +1,35 @@
+services:
+  # you can start this services independently with:
+  # docker compose -f compose.ci.build-local-image.yml up --build 
+
+  # Create a multi architecture image
+  build-local-image:
+    image: hello-local-ci:${TAG:-demo-from-ci}
+    build:
+      context: .
+      platforms:
+        - "linux/amd64"
+        - "linux/arm64"
+      dockerfile: Dockerfile
+
+  start-container-from-local-image:
+    labels:
+      local.service: start-container-from-local-image
+    image: hello-local-ci:${TAG:-demo-from-ci}
+    command: ["./hello"]
+    depends_on:
+      build-local-image:
+        condition: service_completed_successfully
+
+  stop-container-from-local-image:
+    image: docker:cli
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command:
+      - /bin/sh
+      - -c
+      - |  
+        docker stop $(docker ps -q --filter "label=local.service=start-container-from-local-image")     
+    depends_on:
+      start-container-from-local-image:
+        condition: service_started
