@@ -4,12 +4,25 @@ x-documentation: >
   Start the CI pipeline:
   docker compose -f compose.ci.yml up --build
 
+models:
+
+  lucy:
+    model: hf.co/menlo/lucy-gguf:q4_k_m
+
+  coder-model:
+    model: hf.co/qwen/qwen2.5-coder-3b-instruct-gguf:q4_k_m
+    
 services:
   # Run unit tests
   unit-tests:
     extends:
       file: compose.ci.unit-tests.yml
       service: unit-tests
+
+  quality-agent:
+    extends:
+      file: compose.ci.ai-analysis.yml
+      service: quality-agent
 
   multi-arch-build-application:
     extends:
@@ -89,6 +102,14 @@ services:
       stop-container-from-local-image:
         condition: service_completed_successfully
 
+  security-agent:
+    extends:
+      file: compose.ci.ai-analysis.yml
+      service: security-agent
+
+    depends_on:
+      image-analysis:
+        condition: service_completed_successfully
 
   build-publish-image:
     profiles: [ publish-image ]

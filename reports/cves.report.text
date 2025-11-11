@@ -5,10 +5,10 @@
                     │                Analyzed Image                  
 ────────────────────┼────────────────────────────────────────────────
   Target            │  hello-local-ci:demo-from-ci                   
-    digest          │  2e6424801c4a                                  
+    digest          │  9caa0e1bf57d                                  
     platform        │ linux/arm64                                    
     provenance      │ git@github.com:Triton-CI/hello-compose-ci.git  
-                    │  https://github.com/Triton-CI/hello-compose-ci/blob/b55f7c869434d004de70ff2ae7feaa348e8ed017      
+                    │  https://github.com/Triton-CI/hello-compose-ci/blob/2f1b7a206909b8681a4ed391b2b79a730bbc2f26      
     vulnerabilities │    0C     1H     1M     2L                     
     size            │ 10 MB                                          
     packages        │ 26                                             
